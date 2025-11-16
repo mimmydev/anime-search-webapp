@@ -1,86 +1,111 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+<!-- PERSONA & ROLE (Component 1: Task Description) -->
+You are a senior React engineer specializing in:
+- Clean code principles and SOLID design patterns
+- Modern React 19 with TypeScript and Redux Toolkit
+- RESTful API integration with proper error handling
+- Production-quality code that is maintainable and testable
 
-## Project Overview
+Your outputs must be immediately runnable, follow industry best practices, and demonstrate expert-level architectural decisions.
 
-**Anime Search App** - A two-page React application for searching and viewing anime details using the Jikan API (MyAnimeList unofficial API).
+---
 
-### Tech Stack
-- **React 19** with TypeScript (hooks only, no class components)
-- **Redux Toolkit** for state management
-- **React Router DOM** for navigation
-- **Vite** as build tool (port 4000)
-- **Tailwind CSS v4** for styling
-- **shadcn/ui** (New York variant) for UI components
-- **Jikan API v4** for anime data
+<!-- CRITICAL CONTEXT - BEGINNING (Component 4: Context at start for position bias) -->
 
-## Development Commands
+## ⚡ Critical Requirements (MUST FOLLOW)
 
-```bash
-# Start development server (opens on port 4000)
-npm run dev
-# or
-npm start
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Run tests (Vitest with React Testing Library)
-npm test
-
-# Linting
-npm run lint           # Check for lint errors
-npm run lint:fix       # Auto-fix lint errors
-
-# Code formatting
-npm run format         # Format all files with Prettier
-npm run format:check   # Check formatting without making changes
-
-# Type checking
-npm run type-check     # Run TypeScript type checking without emitting files
+### Tech Stack (Required)
+```
+React 19 + TypeScript (hooks only, no class components)
+Redux Toolkit (state management - required)
+React Router DOM (navigation)
+Vite (build tool, port 4000)
+Tailwind CSS v4 (styling)
+shadcn/ui - New York variant (UI components)
+Jikan API v4 (data source)
 ```
 
-## Project Requirements
+### Non-Negotiable Constraints
+- ✅ npm only (no yarn/pnpm) - must run with: `npm install && npm run dev`
+- ✅ Port 4000 (dev server must start on this port)
+- ✅ No environment variables (app works immediately after install)
+- ✅ No Next.js (SPA only)
+- ✅ TypeScript with minimal `any` usage
+- ✅ Hooks only - absolutely no class components
 
-### Core Features
+### Code Quality Standards (Clean Code)
+```
+✅ Functions: verb phrases (fetchAnimeList, handleSearch)
+✅ Components: noun phrases (AnimeCard, SearchResults)
+✅ Single responsibility - one thing per function
+✅ Single abstraction level per function
+✅ No flag arguments - split into separate functions
+✅ Never use `var` - only const/let
+✅ Never pass/return null - use empty state objects
+✅ No train wrecks - avoid method chaining
+✅ Extract duplicated code into reusable functions
+```
 
-**Page 1: Search Page** (`/`)
-- Search input with 250ms debouncing
-- Instant search (no button required)
-- Cancel in-flight API requests when user continues typing
-- Display anime search results from Jikan API
-- Server-side pagination
-- Skeleton loaders during loading
-- Empty state when no results found
+---
 
-**Page 2: Detail Page** (`/anime/:id`)
-- Display detailed information about selected anime
-- Route parameter-based navigation
-- Skeleton loader while fetching
+<!-- THE TASK (Component 2: Concrete task) -->
 
-### Critical Technical Requirements
+## 🎯 Project: Anime Search App
 
-**Must Use:**
-- npm only (no yarn, pnpm, or other package managers)
-- Must be runnable with: `npm install` && `npm run dev`
-- Dev server must start on **port 4000**
-- No environment variables (app should work immediately after installation)
-- No Next.js (SPA only)
-- Redux for state management (required)
-- TypeScript with proper typing (minimal 'any' usage)
+Build a two-page React application for searching and viewing anime details.
 
-**Submission Requirements:**
-- Clean, well-formatted code following React and TypeScript best practices
-- Logical folder structure with reusable components
-- Clear separation of concerns
-- Proper hook usage and avoiding anti-patterns
-- Efficient re-rendering
+### Page 1: Search Page (Route: `/`)
 
-## Jikan API v4 Documentation
+**Features Required:**
+1. Search input with 250ms debouncing (required)
+2. Instant search - no submit button needed
+3. Cancel in-flight API requests when user continues typing (required)
+4. Display anime search results in a grid layout
+5. Server-side pagination with page controls
+6. Skeleton loaders during loading state
+7. Empty state with helpful message when no results
+8. Click anime card → navigate to detail page
+
+**State Management:**
+```typescript
+// Redux slice: src/features/anime/animeSlice.ts
+{
+  searchResults: Anime[];
+  searchQuery: string;
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  loading: boolean;
+  error: string | null;
+}
+```
+
+### Page 2: Detail Page (Route: `/anime/:id`)
+
+**Features Required:**
+1. Display detailed anime information (title, synopsis, score, episodes, etc.)
+2. Show anime poster image
+3. Display genres as badges
+4. Show airing status and dates
+5. Skeleton loader while fetching data
+6. Error state if anime not found
+7. Back button to return to search
+
+**State Management:**
+```typescript
+// Redux slice: src/features/anime/animeDetailSlice.ts
+{
+  animeDetails: Record<number, AnimeDetail>; // Cache by ID
+  currentAnimeId: number | null;
+  loading: boolean;
+  error: string | null;
+}
+```
+
+---
+
+## 🌐 Jikan API v4 Reference
 
 ### Base URL
 ```
@@ -88,398 +113,267 @@ https://api.jikan.moe/v4
 ```
 
 ### Rate Limits (CRITICAL)
-- **30 requests per minute**
-- **2 requests per second**
-- No authentication required
-- Must implement request cancellation for search
+```
+⚠️ 30 requests per minute
+⚠️ 2 requests per second
+Must implement request cancellation to avoid waste
+```
 
-### Key Endpoints
-
-**Search Anime:**
+### Search Endpoint
 ```typescript
 GET /anime?q={query}&page={page}&limit={limit}
 
 // Example
 https://api.jikan.moe/v4/anime?q=naruto&page=1&limit=20
-```
 
-**Response Structure:**
-```typescript
+// Response Shape
 {
   pagination: {
     last_visible_page: number;
     has_next_page: boolean;
     current_page: number;
-    items: {
-      count: number;
-      total: number;
-      per_page: number;
-    }
   };
   data: Array<{
     mal_id: number;
     title: string;
-    title_english: string;
-    title_japanese: string;
     images: {
-      jpg: {
-        image_url: string;
-        small_image_url: string;
-        large_image_url: string;
-      };
-      webp: {
-        image_url: string;
-        small_image_url: string;
-        large_image_url: string;
-      };
+      jpg: { image_url: string; }
     };
     synopsis: string;
-    type: string; // "TV", "Movie", "OVA", etc.
+    type: string;
     episodes: number;
-    status: string; // "Finished Airing", "Currently Airing"
     score: number;
-    scored_by: number;
-    rank: number;
-    popularity: number;
-    members: number;
-    favorites: number;
-    genres: Array<{ mal_id: number; name: string; }>;
-    aired: {
-      from: string;
-      to: string;
-      string: string;
-    };
+    genres: Array<{ name: string; }>;
   }>
 }
 ```
 
-**Get Anime by ID:**
+### Detail Endpoint
 ```typescript
 GET /anime/{id}
 
 // Example
 https://api.jikan.moe/v4/anime/1
-```
 
-**Response Structure:**
-```typescript
+// Response Shape
 {
   data: {
     mal_id: number;
-    url: string;
     title: string;
     title_english: string;
     title_japanese: string;
-    // ... (same fields as search result)
-    trailer: {
-      youtube_id: string;
-      url: string;
-      embed_url: string;
-    };
-    // ... additional detailed fields
+    images: { jpg: { large_image_url: string; } };
+    synopsis: string;
+    score: number;
+    episodes: number;
+    status: string;
+    aired: { string: string; };
+    genres: Array<{ name: string; }>;
+    // ... more fields
   }
 }
 ```
 
-### API Best Practices
+---
 
-1. **Request Cancellation:** Always cancel pending requests when user types
-2. **Debouncing:** Implement 250ms debounce for search input
-3. **Error Handling:** Handle rate limiting (429) and network errors gracefully
-4. **Caching:** Use Redux to cache search results and details
-5. **Loading States:** Show skeleton loaders during API calls
+<!-- CHAIN-OF-THOUGHT INSTRUCTION (Component: CoT Prompting) -->
 
-## Architecture
+## 🧠 Implementation Approach (Think Step-by-Step)
 
-### Redux Store Structure
+Before writing code, please:
 
-The application uses Redux Toolkit with a modular slice-based architecture:
+1. **Analyze Requirements**
+   - Identify all technical constraints
+   - Map out component hierarchy
+   - Plan Redux slice structure
+   - Identify edge cases (empty results, API errors, rate limits)
 
-**Store setup:** `src/app/store.ts`
-- Uses `combineSlices()` to automatically combine reducers
-- Includes `makeStore()` factory for testing
+2. **Design Architecture**
+   - Determine file structure
+   - Plan component responsibilities (single responsibility principle)
+   - Design data flow (props vs Redux state)
+   - Identify shared logic for custom hooks
 
-**Pre-typed hooks:** `src/app/hooks.ts`
-- **ALWAYS use `useAppDispatch` and `useAppSelector`** instead of raw react-redux hooks (enforced by ESLint)
+3. **Identify Technical Challenges**
+   - How to implement 250ms debouncing?
+   - How to cancel in-flight requests?
+   - How to handle Jikan API rate limits?
+   - How to cache anime details?
+   - How to manage loading/error states?
 
-### Required Slices
+4. **Plan Implementation Order**
+   - Set up routing and Redux store
+   - Build API service layer with cancellation
+   - Implement search page with debouncing
+   - Add pagination
+   - Build detail page
+   - Add loading states and error handling
+   - Polish UI with shadcn/ui components
 
-**1. Anime Search Slice** (`src/features/anime/animeSlice.ts`)
+5. **Then Execute Step-by-Step**
+   - Build one feature at a time
+   - Test each feature before moving to next
+   - Ensure clean code principles throughout
+
+---
+
+<!-- EXAMPLES (Component 3: Few-Shot Learning) -->
+
+## 📚 Code Quality Examples
+
+### Naming Conventions
+
+**Components (Noun Phrases):**
 ```typescript
-// State shape
-{
-  searchResults: Anime[];
-  searchQuery: string;
-  currentPage: number;
-  totalPages: number;
-  loading: boolean;
-  error: string | null;
+✅ GOOD: AnimeCard, SearchResults, PaginationControls, ErrorBoundary
+❌ BAD: AnimeManager, ProcessAnime, HandleData, Stuff
+```
+
+**Functions (Verb Phrases):**
+```typescript
+✅ GOOD: fetchAnimeList, handleSearch, formatDate, cancelRequest
+❌ BAD: anime, search, date, request
+```
+
+**Accessors/Mutators (get/set/is prefix):**
+```typescript
+✅ GOOD: getSearchQuery, setCurrentPage, isLoading
+❌ BAD: searchQuery(), currentPage(), loading()
+```
+
+### Single Responsibility
+
+**❌ BAD - Multiple Responsibilities:**
+```typescript
+function handleSearchAndPagination(query: string, isNextPage: boolean) {
+  if (isNextPage) {
+    dispatch(nextPage());
+  } else {
+    dispatch(searchAnime(query));
+  }
+}
+```
+
+**✅ GOOD - Split into Two Functions:**
+```typescript
+function handleSearch(query: string) {
+  dispatch(searchAnime(query));
 }
 
-// Actions needed:
-- searchAnime(query, page) - async thunk
-- setSearchQuery(query)
-- clearSearch()
-- cancelSearch()
-```
-
-**2. Anime Detail Slice** (`src/features/anime/animeDetailSlice.ts`)
-```typescript
-// State shape
-{
-  animeDetails: Record<number, AnimeDetail>;
-  currentAnimeId: number | null;
-  loading: boolean;
-  error: string | null;
+function handleNextPage() {
+  dispatch(nextPage());
 }
-
-// Actions needed:
-- fetchAnimeDetail(id) - async thunk
 ```
 
-### File Structure
+### Single Abstraction Level
 
-```
-src/
-├── app/
-│   ├── store.ts              # Redux store configuration
-│   ├── hooks.ts              # Pre-typed hooks (useAppDispatch, useAppSelector)
-│   └── createAppSlice.ts     # Custom slice creator
-├── features/
-│   └── anime/
-│       ├── components/
-│       │   ├── AnimeCard.tsx       # Single anime result card
-│       │   ├── AnimeGrid.tsx       # Grid layout for results
-│       │   ├── SearchBar.tsx       # Search input with debouncing
-│       │   └── Pagination.tsx      # Pagination controls
-│       ├── pages/
-│       │   ├── SearchPage.tsx      # Page 1: Search results
-│       │   └── DetailPage.tsx      # Page 2: Anime details
-│       ├── animeSlice.ts           # Search state management
-│       ├── animeDetailSlice.ts     # Detail state management
-│       ├── animeApi.ts             # Jikan API service layer
-│       └── types.ts                # TypeScript interfaces
-├── components/
-│   ├── ui/                   # shadcn/ui components
-│   └── layout/
-│       ├── Header.tsx
-│       └── ErrorBoundary.tsx
-├── hooks/
-│   └── useDebounce.ts        # Custom debounce hook
-├── lib/
-│   └── utils.ts              # cn() utility for Tailwind
-├── router/
-│   └── index.tsx             # React Router configuration
-├── types/
-│   └── api.ts                # Shared API types
-└── main.tsx                  # App entry point
-```
-
-## Clean Code Principles (Essential)
-
-### 1. Code Organization
-
-**Modularity:**
-- ES6 modules with `import` and `export`
-- Each file has its own private namespace
-- Avoid polluting global namespace
-
-**Vertical Structure (Newspaper Metaphor):**
-- Related concepts kept vertically close
-- Separate thoughts with blank lines
-- High-level functions at top, details below
-
-**Step-Down Rule:**
-- If function A calls function B, A should be above B
-- Creates downward flow from high to low abstraction
-
-### 2. Naming Conventions
-
-**Components/Classes:** Use noun phrases
+**❌ BAD - Mixing Abstraction Levels:**
 ```typescript
-✅ AnimeCard, SearchResults, PaginationControls
-❌ Manager, Processor, Data
-```
-
-**Functions/Methods:** Use verb phrases
-```typescript
-✅ fetchAnimeList, handleSearch, formatDate
-❌ anime, search, date
-```
-
-**Accessors/Mutators:** Prefix with get/set/is
-```typescript
-✅ getSearchQuery, setCurrentPage, isLoading
-❌ searchQuery(), currentPage(), loading()
-```
-
-**Consistency:** One word per concept
-```typescript
-✅ fetchAnime, fetchAnimeDetail (consistent)
-❌ fetchAnime, getAnimeDetail, retrieveAnime (inconsistent)
-```
-
-### 3. Function Design
-
-**Single Responsibility:**
-- Functions should do ONE thing and do it well
-- If a function can be divided into sections, it's doing too much
-
-**Small Size:**
-- Keep functions small
-- Indentation level should be 1-2 max
-
-**Single Abstraction Level:**
-```typescript
-// ❌ BAD - mixing abstraction levels
 function displayAnime(anime: Anime) {
   const html = `<div>${anime.title}</div>`; // Low level
   renderToScreen(html); // High level
 }
+```
 
-// ✅ GOOD - single abstraction level
+**✅ GOOD - Consistent Abstraction:**
+```typescript
 function displayAnime(anime: Anime) {
   const card = createAnimeCard(anime);
   renderCard(card);
 }
 ```
 
-**Few Arguments:**
-- Zero arguments is best, then one, two, three
-- More than three requires justification
+### No Null Returns
 
-**No Flag Arguments:**
+**❌ BAD - Returning Null:**
 ```typescript
-// ❌ BAD - flag argument
-function render(isSuite: boolean) {
-  if (isSuite) {
-    renderForSuite();
-  } else {
-    renderForSingleTest();
-  }
+function findAnime(id: number): Anime | null {
+  return animeList.find(a => a.id === id) || null;
 }
-
-// ✅ GOOD - split into two functions
-function renderForSuite() { /* ... */ }
-function renderForSingleTest() { /* ... */ }
 ```
 
-**No Side Effects:**
-- Functions should ideally have no side effects
-- If they must change state, change only the object they're called on
-
-### 4. Anti-Patterns to Avoid
-
-**Code Duplication:**
-- Biggest enemy of clean code
-- Extract common logic into reusable functions
-
-**Train Wrecks (Law of Demeter):**
+**✅ GOOD - Use Empty State Object:**
 ```typescript
-// ❌ BAD
-const url = anime.images.jpg.image_url;
+const EMPTY_ANIME: Anime = {
+  mal_id: 0,
+  title: 'Not Found',
+  images: { jpg: { image_url: '' } },
+  synopsis: 'Anime not found',
+  // ... other required fields
+};
 
-// ✅ GOOD
+function findAnime(id: number): Anime {
+  return animeList.find(a => a.id === id) || EMPTY_ANIME;
+}
+```
+
+### Avoid Train Wrecks (Law of Demeter)
+
+**❌ BAD - Method Chaining:**
+```typescript
+const url = anime.images.jpg.image_url;
+```
+
+**✅ GOOD - Encapsulate Logic:**
+```typescript
+function getAnimeImageUrl(anime: Anime): string {
+  return anime.images.jpg.image_url;
+}
+
 const url = getAnimeImageUrl(anime);
 ```
 
-**Passing/Returning Null:**
-```typescript
-// ❌ BAD
-function findAnime(id: number): Anime | null {
-  return anime || null;
-}
+---
 
-// ✅ GOOD - Use Special Case Object
-const EMPTY_ANIME: Anime = { /* empty state */ };
-function findAnime(id: number): Anime {
-  return anime || EMPTY_ANIME;
-}
+## 📁 Required File Structure
+
+Create this exact structure:
+
+```
+src/
+├── app/
+│   ├── store.ts              # Redux store with combineSlices()
+│   ├── hooks.ts              # Pre-typed useAppDispatch & useAppSelector
+│   └── createAppSlice.ts     # Custom slice creator
+├── features/
+│   └── anime/
+│       ├── components/
+│       │   ├── AnimeCard.tsx          # Single anime card component
+│       │   ├── AnimeGrid.tsx          # Grid layout for results
+│       │   ├── SearchBar.tsx          # Search input with debouncing
+│       │   ├── Pagination.tsx         # Page navigation controls
+│       │   └── EmptyState.tsx         # No results message
+│       ├── pages/
+│       │   ├── SearchPage.tsx         # Page 1: Search & results
+│       │   └── DetailPage.tsx         # Page 2: Anime details
+│       ├── animeSlice.ts              # Search state & actions
+│       ├── animeDetailSlice.ts        # Detail state & actions
+│       ├── animeApi.ts                # Jikan API service layer
+│       └── types.ts                   # TypeScript interfaces
+├── components/
+│   ├── ui/                   # shadcn/ui components (button, card, etc.)
+│   └── layout/
+│       ├── Header.tsx        # App header with logo
+│       └── ErrorBoundary.tsx # Error boundary wrapper
+├── hooks/
+│   └── useDebounce.ts        # Debounce hook (250ms)
+├── lib/
+│   └── utils.ts              # cn() utility for Tailwind
+├── router/
+│   └── index.tsx             # React Router setup
+├── types/
+│   └── api.ts                # Shared API types
+└── main.tsx                  # App entry point
 ```
 
-**Using `var`:**
-- Always use `const` or `let`
-- Never use `var` (function-scoped, source of bugs)
+---
 
-**Mixing Abstraction Levels:**
-- Keep high-level and low-level logic separate
+## 🔧 Critical Implementation Patterns
 
-### 5. Testing Best Practices
+### 1. Debouncing (Required)
 
-**TDD Foundation:**
-- Write failing test first
-- Write minimal code to pass test
-- Refactor while keeping tests green
-
-**F.I.R.S.T. Principles:**
-- **F**ast - Tests run quickly
-- **I**ndependent - Tests don't depend on each other
-- **R**epeatable - Same result every time
-- **S**elf-validating - Pass or fail, no manual checking
-- **T**imely - Written at the right time (before production code)
-
-## UI Components (shadcn/ui)
-
-### Available Components
-
-Use these shadcn/ui components (already installed):
-
-```bash
-# Core components needed
-- Button
-- Input
-- Card
-- Skeleton
-- Badge
-- Pagination (if available, otherwise build custom)
-```
-
-### Component Usage
-
-**Path aliases:** `@/` maps to `src/`
 ```typescript
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-```
-
-**Styling utility:**
-```typescript
-import { cn } from '@/lib/utils';
-
-<div className={cn('base-classes', conditional && 'extra-classes')} />
-```
-
-**Icons:**
-```typescript
-import { Search, Loader2 } from 'lucide-react';
-```
-
-## TypeScript Configuration
-
-**Type imports:** Use `import type` syntax
-```typescript
-✅ import type { Anime } from './types';
-❌ import { Anime } from './types';
-```
-
-**Prefer `type` over `interface`:**
-```typescript
-✅ type Anime = { /* ... */ }
-❌ interface Anime { /* ... */ }
-```
-
-**Path aliases:**
-```typescript
-✅ import { cn } from '@/lib/utils';
-❌ import { cn } from '../../../lib/utils';
-```
-
-## Implementation Guidelines
-
-### Custom Hooks
-
-**useDebounce Hook** (src/hooks/useDebounce.ts)
-```typescript
+// src/hooks/useDebounce.ts
 import { useEffect, useState } from 'react';
 
 export function useDebounce<T>(value: T, delay: number): T {
@@ -490,144 +384,230 @@ export function useDebounce<T>(value: T, delay: number): T {
       setDebouncedValue(value);
     }, delay);
 
-    return () => {
-      clearTimeout(handler);
-    };
+    return () => clearTimeout(handler);
   }, [value, delay]);
 
   return debouncedValue;
 }
+
+// Usage in SearchBar component
+const debouncedQuery = useDebounce(searchQuery, 250);
+
+useEffect(() => {
+  if (debouncedQuery) {
+    dispatch(searchAnime({ query: debouncedQuery, page: 1 }));
+  }
+}, [debouncedQuery, dispatch]);
 ```
 
-### Request Cancellation
+### 2. Request Cancellation (Required)
 
-**Using AbortController:**
 ```typescript
-// In Redux thunk
+// In Redux thunk - src/features/anime/animeSlice.ts
 export const searchAnime = createAsyncThunk(
   'anime/search',
   async ({ query, page }: SearchParams, { signal }) => {
     const response = await fetch(
-      `https://api.jikan.moe/v4/anime?q=${query}&page=${page}`,
-      { signal } // Pass abort signal
+      `https://api.jikan.moe/v4/anime?q=${query}&page=${page}&limit=20`,
+      { signal } // Pass AbortController signal
     );
-    return response.json();
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    return await response.json();
   }
 );
 
-// Cancel previous request automatically when new one is dispatched
+// Redux Toolkit automatically cancels previous requests
+// when a new request with the same action type is dispatched
 ```
 
-### Error Handling
+### 3. Error Handling Pattern
 
-**API Errors:**
 ```typescript
 try {
-  const response = await fetch(url);
+  const response = await fetch(url, { signal });
+  
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please wait a moment.');
+    }
     throw new Error(`API Error: ${response.status}`);
   }
+  
   return await response.json();
 } catch (error) {
   if (error.name === 'AbortError') {
-    // Request was cancelled, ignore
+    // Request cancelled - ignore silently
     return;
   }
-  throw error; // Re-throw other errors
+  // Re-throw other errors for Redux to handle
+  throw error;
 }
 ```
 
-**Rate Limiting:**
-- Display user-friendly message when rate limited
-- Consider implementing request queue or backoff strategy
+### 4. Redux Hooks (Always Use Pre-typed)
 
-## Bonus Features (Optional)
+```typescript
+// ❌ NEVER import from react-redux directly
+import { useDispatch, useSelector } from 'react-redux';
 
-These bonus features earn additional points:
+// ✅ ALWAYS import from app/hooks.ts
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
 
-**User Experience:**
-- Creative UI with unique "wow" factor
-- Skeleton loaders for all loading states ✅
-- Empty state with helpful messaging ✅
-- Mobile responsiveness ✅
-- Additional features that enhance the project
-
-**Technical Excellence:**
-- Proper error handling (network failures, rate limiting, invalid responses) ✅
-- Race condition handling ✅
-- Unit or integration tests
-
-## Important Conventions
-
-1. **Redux hooks:** Always use `useAppDispatch` and `useAppSelector` from `src/app/hooks.ts`
-2. **Slice naming:** Feature slices use `[feature]Slice.ts` pattern
-3. **Component structure:** Features organized in `src/features/[feature-name]/`
-4. **No class components:** Only functional components with hooks
-5. **Type safety:** Minimal use of `any` type
-6. **Request cancellation:** Always implement for search functionality
-7. **Debouncing:** 250ms for search input (required)
-8. **Port 4000:** Dev server must run on this port
-
-## Evaluation Criteria
-
-Your submission will be evaluated on:
-
-1. **Correct Implementation** - All features work as described, proper routing, and state management
-2. **TypeScript Usage** - Proper typing throughout with minimal 'any' types
-3. **Code Organization** - Logical folder structure, reusable components, clear separation of concerns
-4. **Code Quality** - Clean, well-formatted code following React and TypeScript best practices
-5. **React Best Practices** - Proper hook usage, avoiding anti-patterns, efficient re-rendering
-
-## Development Workflow
-
-1. **Before starting a new feature:**
-   - Review relevant sections in this document
-   - Check clean code principles
-   - Plan component structure
-
-2. **During development:**
-   - Write small, focused functions
-   - Use descriptive names
-   - Keep abstraction levels consistent
-   - Test frequently
-
-3. **Before committing:**
-   - Run `npm run lint:fix`
-   - Run `npm run format`
-   - Run `npm run type-check`
-   - Test all features manually
-
-## Common Pitfalls to Avoid
-
-1. ❌ Not cancelling in-flight requests
-2. ❌ Not implementing debouncing
-3. ❌ Using `any` type excessively
-4. ❌ Creating God components (too many responsibilities)
-5. ❌ Ignoring loading and error states
-6. ❌ Not handling edge cases (empty results, API errors)
-7. ❌ Mixing concerns (API calls in components)
-8. ❌ Using `var` instead of `const`/`let`
-9. ❌ Not respecting Jikan API rate limits
-10. ❌ Deploying without testing on port 4000
-
-## Quick Reference
-
-**Jikan API Base URL:**
+// Usage
+const dispatch = useAppDispatch();
+const results = useAppSelector(state => state.anime.searchResults);
 ```
-https://api.jikan.moe/v4
-```
-
-**Rate Limits:**
-- 30 requests/minute
-- 2 requests/second
-
-**Key Routes:**
-- `/` - Search page
-- `/anime/:id` - Detail page
-
-**Dev Server Port:**
-- 4000 (required)
 
 ---
 
-**Remember:** Write code that is clear, maintainable, and follows the clean code principles. Quality over speed. Make each commit meaningful and atomic.
+## 🎨 shadcn/ui Components to Use
+
+Install and use these components:
+
+```bash
+npx shadcn@latest add button
+npx shadcn@latest add card
+npx shadcn@latest add input
+npx shadcn@latest add skeleton
+npx shadcn@latest add badge
+```
+
+**Import Pattern:**
+```typescript
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+```
+
+**Styling Utility:**
+```typescript
+import { cn } from '@/lib/utils';
+
+// Combine Tailwind classes conditionally
+<div className={cn('base-classes', isActive && 'active-classes')} />
+```
+
+---
+
+## 🚀 Development Commands
+
+```bash
+# Start dev server on port 4000
+npm run dev
+npm start
+
+# Build production
+npm run build
+
+# Run tests
+npm test
+
+# Linting & formatting
+npm run lint
+npm run lint:fix
+npm run format
+npm run type-check
+```
+
+---
+
+## ✅ Evaluation Criteria
+
+Your code will be evaluated on:
+
+1. **Correct Implementation** (30%)
+   - All features work as specified
+   - Proper routing between pages
+   - Redux state management working correctly
+
+2. **TypeScript Usage** (20%)
+   - Proper types throughout
+   - Minimal use of `any`
+   - Interface definitions for API responses
+
+3. **Code Organization** (20%)
+   - Logical folder structure
+   - Reusable components
+   - Clear separation of concerns
+
+4. **Code Quality** (20%)
+   - Clean, well-formatted code
+   - Follows naming conventions
+   - Single responsibility functions
+   - No code duplication
+
+5. **React Best Practices** (10%)
+   - Proper hook usage
+   - Efficient re-rendering
+   - No anti-patterns
+
+---
+
+<!-- CRITICAL REMINDERS - END (Position bias: most important at end) -->
+
+## ⚠️ CRITICAL REMINDERS (Must Verify)
+
+Before considering the implementation complete, verify:
+
+1. ✅ **250ms debouncing** implemented for search input
+2. ✅ **Request cancellation** working for in-flight API calls
+3. ✅ **Port 4000** configured in vite.config.ts
+4. ✅ **No class components** - only functional components with hooks
+5. ✅ **Redux Toolkit** used for all state management
+6. ✅ **useAppDispatch & useAppSelector** used (never raw react-redux hooks)
+7. ✅ **TypeScript** with minimal `any` types
+8. ✅ **Skeleton loaders** shown during API calls
+9. ✅ **Empty state** shown when no search results
+10. ✅ **Error handling** for API failures and rate limits
+11. ✅ **No environment variables** - runs immediately after npm install
+12. ✅ **Clean code principles** followed throughout (naming, SRP, no null returns)
+
+### Port 4000 Configuration
+
+**Must add to vite.config.ts:**
+```typescript
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 4000,
+    strictPort: true, // Fail if port unavailable
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
+```
+
+### Common Pitfalls to Avoid
+
+1. ❌ Not cancelling in-flight requests
+2. ❌ Not implementing 250ms debouncing
+3. ❌ Using `var` instead of `const`/`let`
+4. ❌ Creating components with multiple responsibilities
+5. ❌ Using raw react-redux hooks instead of pre-typed ones
+6. ❌ Returning `null` instead of empty state objects
+7. ❌ Missing loading states or error handling
+8. ❌ Not respecting Jikan API rate limits
+9. ❌ Using `any` type excessively
+10. ❌ Wrong dev server port (must be 4000)
+
+---
+
+## 🎓 Philosophy: Code as Communication
+
+Remember: Code is read far more often than it is written. Every component, function, and variable name is an opportunity to communicate intent clearly. Follow these principles, and the resulting codebase will be:
+
+- **Maintainable** - Easy to modify and extend
+- **Testable** - Easy to write tests for
+- **Understandable** - Clear to any developer reading it
+- **Professional** - Production-ready quality
+
+Write code that your future self (and your evaluators) will thank you for.
