@@ -1,16 +1,23 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { setQuery, setHasSearched, selectQuery } from '../animeSlice'
+import { setQuery, setHasSearched, selectQuery, selectHasSearched } from '../animeSlice'
+import { useSearchAnimeQuery } from '../animeApi'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search } from 'lucide-react'
+import { Search, Loader2 } from 'lucide-react'
 
 export const SearchBar = () => {
   const dispatch = useAppDispatch()
   const query = useAppSelector(selectQuery)
+  const hasSearched = useAppSelector(selectHasSearched)
   const [localQuery, setLocalQuery] = useState(query)
-  const [isSearching, setIsSearching] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Get actual API loading state
+  const { isLoading: isApiLoading } = useSearchAnimeQuery(
+    { q: query, page: 1 },
+    { skip: !query || !hasSearched }
+  )
 
   // Update local query when Redux query changes (e.g., from navigation)
   useEffect(() => {
@@ -28,9 +35,6 @@ export const SearchBar = () => {
         dispatch(setQuery(localQuery.trim()))
         if (localQuery.trim()) {
           dispatch(setHasSearched(true))
-          setIsSearching(true)
-          // Reset searching state after a short delay for visual feedback
-          setTimeout(() => { setIsSearching(false); }, 500)
         }
       }
     }, 300) // 300ms debounce delay
@@ -47,8 +51,6 @@ export const SearchBar = () => {
     if (localQuery.trim()) {
       dispatch(setQuery(localQuery.trim()))
       dispatch(setHasSearched(true))
-      setIsSearching(true)
-      setTimeout(() => { setIsSearching(false); }, 500)
     }
   }
 
@@ -57,6 +59,8 @@ export const SearchBar = () => {
     dispatch(setQuery(''))
     dispatch(setHasSearched(false))
   }
+
+  const isLoading = isApiLoading
 
   return (
     <form onSubmit={handleSubmit} className="relative">
@@ -87,16 +91,21 @@ export const SearchBar = () => {
             type="submit"
             variant="ghost"
             size="sm"
-            disabled={isSearching || !localQuery.trim()}
+            disabled={isLoading || !localQuery.trim()}
             className="h-6 w-6 p-0"
             aria-label="Submit search"
           >
-            <Search className="h-3 w-3" />
+            {isLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Search className="h-3 w-3" />
+            )}
           </Button>
         </div>
       </div>
-      {isSearching && (
-        <div className="absolute top-full mt-1 left-0 right-0 text-sm text-muted-foreground">
+      {isLoading && (
+        <div className="absolute top-full mt-1 left-0 right-0 text-sm text-muted-foreground flex items-center gap-1">
+          <Loader2 className="h-3 w-3 animate-spin" />
           Searching...
         </div>
       )}

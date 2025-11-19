@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useGetAnimeByIdQuery } from '../animeApi'
-import { Skeleton } from '@/components/ui/skeleton'
+import { DetailPageSkeleton } from '../components/DetailPageSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export const DetailPage = () => {
@@ -31,23 +31,7 @@ export const DetailPage = () => {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <Skeleton className="h-8 w-3/4" />
-            <div className="flex gap-6">
-              <Skeleton className="h-64 w-48" />
-              <div className="flex-1 space-y-4">
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-6 w-2/3" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
+    return <DetailPageSkeleton />
   }
 
   if (isError || !animeDetail) {
