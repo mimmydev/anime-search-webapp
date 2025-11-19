@@ -1,12 +1,14 @@
-import "./App.css"
+import { Provider } from "react-redux"
+import { RouterProvider } from "react-router-dom"
+import { store } from "./app/store"
+import { router } from "./router"
 
-export const App = () => (
-  <div className="min-h-screen bg-background">
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Anime Search</h1>
-      <p className="text-center text-muted-foreground">
-        Search for your favorite anime using the MyAnimeList database
-      </p>
-    </main>
-  </div>
-)
+function App() {
+  return (
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
+  )
+}
+
+export default App
