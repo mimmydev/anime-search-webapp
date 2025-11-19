@@ -1,8 +1,12 @@
 {
-  "name": "vite-template-redux",
+  "name": "anime-search-webapp",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=24.11.1",
+    "npm": ">=11.6.2"
+  },
   "scripts": {
     "build": "tsc -b && vite build",
     "dev": "vite",
@@ -13,7 +17,8 @@
     "preview": "vite preview",
     "start": "vite",
     "test": "vitest --run",
-    "type-check": "tsc -b --noEmit"
+    "type-check": "tsc -b --noEmit",
+    "check-versions": "node -e \"console.log('Node.js:', process.version); console.log('npm:', require('child_process').execSync('npm -v').toString().trim());\""
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
